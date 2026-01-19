@@ -36,4 +36,11 @@ export default async function globalTeardown() {
   }
 
   console.log('[Global Teardown] Cleanup complete')
+
+  // Force exit in CI to prevent hangs
+  if (process.env.CI) {
+    console.log('[Global Teardown] CI mode - forcing exit')
+    // eslint-disable-next-line no-process-exit
+    process.exit(0)
+  }
 }
