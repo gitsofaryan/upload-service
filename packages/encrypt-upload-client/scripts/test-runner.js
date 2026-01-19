@@ -1,37 +1,47 @@
-import { globSync } from 'glob'
-import { spawnSync } from 'child_process'
-import { join } from 'path'
+import { globSync } from "glob";
+import { spawn } from "child_process";
 
 // Find all .spec.js files, ignoring .playwright.spec.js and node_modules
-const files = globSync('test/**/*.spec.js', {
-  ignore: ['**/*.playwright.spec.js', 'node_modules/**'],
+const files = globSync("test/**/*.spec.js", {
+  ignore: ["**/*.playwright.spec.js", "node_modules/**"],
   windowsPathsNoEscape: true,
-})
+});
 
 if (files.length === 0) {
-  console.log('No test files found.')
-  process.exit(0)
+  console.log("No test files found.");
+  process.exit(0);
 }
 
-console.log(`Running node tests on ${files.length} files...`)
+console.log(`Running node tests on ${files.length} files...`);
 
-// Run node --test with the found files
-// Add --test-timeout to prevent individual tests from hanging forever
-// Add timeout to spawnSync as a safety net
-const result = spawnSync(
-  'node',
-  ['--test', '--test-timeout=300000', ...files],
-  {
-    stdio: 'inherit',
-    shell: false,
-    timeout: 900000, // 15 minute hard timeout for entire test suite
+// 5 minute per-test timeout, 10 minute overall timeout
+const OVERALL_TIMEOUT_MS = 600000; // 10 minutes
+
+const child = spawn("node", ["--test", "--test-timeout=300000", ...files], {
+  stdio: "inherit",
+  shell: false,
+});
+
+let killed = false;
+
+// Set up hard timeout
+const timeoutId = setTimeout(() => {
+  console.error(`\n\nTEST SUITE TIMEOUT: Exceeded ${OVERALL_TIMEOUT_MS / 60000} minutes. Killing...`);
+  killed = true;
+  child.kill("SIGKILL");
+}, OVERALL_TIMEOUT_MS);
+
+child.on("close", (code) => {
+  clearTimeout(timeoutId);
+  if (killed) {
+    console.error("Tests were killed due to timeout.");
+    process.exit(1);
   }
-)
+  process.exit(code ?? 1);
+});
 
-// Handle timeout case
-if (result.signal === 'SIGTERM') {
-  console.error('Test suite timed out!')
-  process.exit(1)
-}
-
-process.exit(result.status ?? 1)
+child.on("error", (err) => {
+  clearTimeout(timeoutId);
+  console.error("Failed to start test process:", err);
+  process.exit(1);
+});
