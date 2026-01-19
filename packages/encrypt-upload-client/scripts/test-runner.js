@@ -26,14 +26,21 @@ const child = spawn('node', ['--test', '--test-timeout=300000', ...files], {
 let killed = false
 
 // Set up hard timeout
+// Set up hard timeout
 const timeoutId = setTimeout(() => {
   console.error(
     `\n\nTEST SUITE TIMEOUT: Exceeded ${
       OVERALL_TIMEOUT_MS / 60000
-    } minutes. Force killing process...`
+    } minutes. Sending SIGINT to trigger wtfnode...`
   )
   killed = true
-  child.kill('SIGKILL')
+  child.kill('SIGINT') // wtfnode catches this and prints handles
+
+  // Hard kill if still alive after 5s
+  setTimeout(() => {
+    console.error('Force killing process...')
+    child.kill('SIGKILL')
+  }, 5000).unref()
 }, OVERALL_TIMEOUT_MS)
 
 child.on('close', (code) => {

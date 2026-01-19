@@ -138,13 +138,24 @@ async function validateAuthorization(authorization) {
 
   // per-CID attempt function: classify responses
   const checkCID = (/** @type {string} */ cid) => async () => {
-    // Add timeout to fetch to prevent hanging on slow endpoints
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 5000) // 5s timeout per fetch
+    // Polyfill AbortSignal.any for Node < 20
+    const anySignal = (signals) => {
+      // @ts-ignore
+      if (AbortSignal.any) return AbortSignal.any(signals)
+      const c = new AbortController()
+      for (const s of signals) {
+        if (s.aborted) {
+          c.abort(s.reason)
+          return c.signal
+        }
+        s.addEventListener('abort', () => c.abort(s.reason), { once: true })
+      }
+      return c.signal
+    }
 
     try {
       const res = await fetch(`${REVOCATION_URL}/${cid}`, {
-        signal: AbortSignal.any([globalAbort.signal, controller.signal]),
+        signal: anySignal([globalAbort.signal, controller.signal]),
       })
       clearTimeout(timeout)
       return processResponse(res)
