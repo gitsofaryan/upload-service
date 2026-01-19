@@ -60,3 +60,8 @@ jobs:
       - run: pnpm nx affected -t typecheck lint build test depcheck
         env:
           NX_VERBOSE_LOGGING: ${{ runner.debug && 'true' || 'false' }}
+
+      - name: Encrypt Upload Client Browser Tests
+        run: pnpm nx run @storacha/encrypt-upload-client:test:browser
+        env:
+          NX_VERBOSE_LOGGING: ${{ runner.debug && 'true' || 'false' }}
