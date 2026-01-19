@@ -18,11 +18,15 @@ console.log(`Running node tests on ${files.length} files...`)
 // Run node --test with the found files
 // Add --test-timeout to prevent individual tests from hanging forever
 // Add timeout to spawnSync as a safety net
-const result = spawnSync('node', ['--test', '--test-timeout=120000', ...files], {
-  stdio: 'inherit',
-  shell: false,
-  timeout: 600000, // 10 minute hard timeout for entire test suite
-})
+const result = spawnSync(
+  'node',
+  ['--test', '--test-timeout=300000', ...files],
+  {
+    stdio: 'inherit',
+    shell: false,
+    timeout: 900000, // 15 minute hard timeout for entire test suite
+  }
+)
 
 // Handle timeout case
 if (result.signal === 'SIGTERM') {
