@@ -146,6 +146,8 @@ export function createMockKeyManagerServer(
         reject(err)
       } else {
         const protocol = useHttps ? 'https' : 'http'
+        // Unref the server so it doesn't prevent the process from exiting
+        httpServer.unref()
         resolve({
           server: httpServer,
           url: `${protocol}://localhost:${port}`,
