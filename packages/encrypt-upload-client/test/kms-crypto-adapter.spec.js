@@ -1,5 +1,5 @@
 import './setup.js'
-import { test, describe, after } from 'node:test'
+import { test, describe } from 'node:test'
 import assert from 'node:assert'
 import * as Server from '@ucanto/server'
 import { base64 } from 'multiformats/bases/base64'
@@ -533,11 +533,5 @@ await describe('KMSCryptoAdapter', async () => {
         /KMSCryptoAdapter can only handle KMS metadata/
       )
     })
-  })
-  // Force exit to prevent hanging handles from keeping the process alive
-  after(() => {
-    setTimeout(() => {
-      process.exit(0)
-    }, 100)
   })
 })
