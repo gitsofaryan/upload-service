@@ -15,8 +15,8 @@ if (files.length === 0) {
 console.log(`Running node tests on ${files.length} files...`)
 
 // 5 minute per-test timeout
-// 15 minute overall timeout (generous to avoid false positives in slow CI)
-const OVERALL_TIMEOUT_MS = 15 * 60 * 1000
+// 10 minute overall timeout (reduced from 15 to fail faster)
+const OVERALL_TIMEOUT_MS = 10 * 60 * 1000
 
 const child = spawn('node', ['--test', '--test-timeout=300000', ...files], {
   stdio: 'inherit',
