@@ -85,25 +85,10 @@ export default defineConfig({
   },
 
   // Global setup to prepare server
-  globalSetup: async () => {
-    if (!isCI) return
-
-    // Pre-clear any lingering resources
-    setTimeout(() => {}, 100).unref()
-  },
+  globalSetup: isCI ? './test/mocks/playwright/global-setup.js' : undefined,
 
   // Global teardown to force exit
-  globalTeardown: async () => {
-    if (!isCI) return
-
-    // Trigger aggressive exit
-    setupCIExit()
-
-    // Keep script alive just long enough for exit to fire
-    return new Promise(() => {
-      setTimeout(() => {}, 5000)
-    })
-  },
+  globalTeardown: isCI ? './test/mocks/playwright/global-teardown.js' : undefined,
 
   projects: [
     {

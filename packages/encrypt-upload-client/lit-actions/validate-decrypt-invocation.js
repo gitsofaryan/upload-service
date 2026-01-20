@@ -138,29 +138,12 @@ async function validateAuthorization(authorization) {
 
   // per-CID attempt function: classify responses
   const checkCID = (/** @type {string} */ cid) => async () => {
-    // Polyfill AbortSignal.any for Node < 20
-    const anySignal = (signals) => {
-      // @ts-ignore
-      if (AbortSignal.any) return AbortSignal.any(signals)
-      const c = new AbortController()
-      for (const s of signals) {
-        if (s.aborted) {
-          c.abort(s.reason)
-          return c.signal
-        }
-        s.addEventListener('abort', () => c.abort(s.reason), { once: true })
-      }
-      return c.signal
-    }
-
     try {
       const res = await fetch(`${REVOCATION_URL}/${cid}`, {
-        signal: anySignal([globalAbort.signal, controller.signal]),
+        signal: globalAbort.signal,
       })
-      clearTimeout(timeout)
       return processResponse(res)
     } catch (err) {
-      clearTimeout(timeout)
       throw err
     }
 
